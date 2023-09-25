@@ -1,0 +1,27 @@
+{
+  "name": "cricko",
+  "version": "1.0.0",
+  "description": "This is a scoring app",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^5.3.2",
+    "parcel": "^2.9.3",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.8.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.11.0",
+    "react-router-dom": "^6.16.0"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.22.15",
+    "process": "^0.11.10"
+  }
+}
