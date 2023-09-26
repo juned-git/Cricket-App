@@ -4,13 +4,18 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
 import { Link } from "react-router-dom";
-import { AddTeamValidation } from "./helper";
+import {
+  AddTeamValidation,
+  setTossWinner,
+  setTossSelection,
+  setNonTournamentMatchesInLocalStorage,
+  getNonTournamentMatchesFromLocalStorage,
+} from "./helper";
+import { INITIAL_MODEL_DATA } from "../../config";
 
 const Home = () => {
   const [nonTournamentMatches, setNonTournamentMatches] = useState([]);
-  const [team_1_Name, setTeam_1_Name] = useState("Team 1");
-  const [team_2_Name, setTeam_2_Name] = useState("Team 2");
-  const [toss, setToss] = useState({ team: "", choose: "" });
+  const [modelData, setModelData] = useState(INITIAL_MODEL_DATA);
   const [show, setShow] = useState(false);
   const [valData, setValData] = useState({});
 
@@ -18,21 +23,16 @@ const Home = () => {
   const handleShow = () => setShow(true);
 
   useEffect(() => {
-    const matches = localStorage.getItem("non-tournement-matches");
-    console.log(matches);
+    const matches = getNonTournamentMatchesFromLocalStorage();
     if (!matches) {
-      localStorage.setItem("non-tournement-matches", JSON.stringify([]));
+      setNonTournamentMatchesInLocalStorage([]);
     } else {
-      setNonTournamentMatches(JSON.parse(matches));
+      setNonTournamentMatches(matches);
     }
   }, []);
 
-  const setTeamNamesAndToss = () => {
-    const validationData = AddTeamValidation({
-      team_1_Name,
-      team_2_Name,
-      toss,
-    });
+  const setTeamNamesTossAndOver = () => {
+    const validationData = AddTeamValidation(modelData);
     setValData(validationData);
 
     if (validationData.validation) {
@@ -45,27 +45,33 @@ const Home = () => {
         },
         team_1: {
           name: "Team 1",
-          players: [],
-          TotalScore: 0,
+          batsman: [],
+          baller:[],
+          totalScore: 0,
           wickets: 0,
+          overs:0
         },
         team_2: {
           name: "Team 2",
-          players: [],
-          TotalScore: 0,
+          batsman: [],
+          baller:[],
+          totalScore: 0,
           wickets: 0,
+          overs:0
         },
       };
-      match.team_1.name = team_1_Name;
-      match.team_2.name = team_2_Name;
-      match.toss = { ...toss };
+      match.team_1.name = modelData.team_1_name;
+      match.team_2.name = modelData.team_2_name;
+      if (modelData.toss.team === "1") {
+        match.toss = { ...modelData.toss, team: match.team_1.name };
+      } else {
+        match.toss = { ...modelData.toss, team: match.team_2.name };
+      }
       matches.push(match);
       setNonTournamentMatches(matches);
-      localStorage.setItem("non-tournement-matches", JSON.stringify(matches));
+      setNonTournamentMatchesInLocalStorage(matches);
       handleClose();
-      setTeam_1_Name("Team 1");
-      setTeam_2_Name("Team 2");
-      setToss({ team: "", choose: "" });
+      setModelData(INITIAL_MODEL_DATA);
     }
   };
   const AddNewMatch = () => handleShow();
@@ -74,7 +80,7 @@ const Home = () => {
     const matches = [...nonTournamentMatches];
     matches.splice(index, 1);
     setNonTournamentMatches(matches);
-    localStorage.setItem("non-tournement-matches", JSON.stringify(matches));
+    setNonTournamentMatchesInLocalStorage(matches);
   };
   return (
     <div className="container">
@@ -86,67 +92,78 @@ const Home = () => {
           <p className="text-danger">{valData.message}</p>
           <label>Team 1 :</label>
           <input
-            required
             type="text"
-            value={team_1_Name}
-            onChange={(e) => setTeam_1_Name(e.target.value)}
+            value={modelData.team_1_name}
+            onChange={(e) => {
+              const team_1_name = e.target.value;
+              setModelData({ ...modelData, team_1_name });
+            }}
             className="w-100"
           />
           <label className="mt-2">Team 2 :</label>
           <input
-            required
             type="text"
-            value={team_2_Name}
-            onChange={(e) => setTeam_2_Name(e.target.value)}
+            value={modelData.team_2_name}
+            onChange={(e) => {
+              const team_2_name = e.target.value;
+              setModelData({ ...modelData, team_2_name });
+            }}
             className="w-100 "
           />
           <b className="mt-2">Toss Winner</b>
           <div className="d-flex">
             <Form.Check
-              required
-              label={team_1_Name}
+              label={"Team 1"}
               name="group1"
               type="radio"
-              value={team_1_Name}
-              onClick={(e) => setToss({ ...toss, team: e.target.value })}
+              value="1"
+              onClick={(e) => setTossWinner(e, modelData, setModelData)}
             />
             <Form.Check
-              required
-              label={team_2_Name}
+              label={"Team 2"}
               name="group1"
               type="radio"
-              value={team_2_Name}
+              value="2"
               className="mx-3"
-              onClick={(e) => setToss({ ...toss, team: e.target.value })}
+              onClick={(e) => setTossWinner(e, modelData, setModelData)}
             />
           </div>
 
           <b className="mt-2">Choose</b>
           <div className="d-flex">
             <Form.Check
-              required
               label="Batting"
               name="group2"
               type="radio"
               value="Bat"
-              onClick={(e) => setToss({ ...toss, choose: e.target.value })}
+              onClick={(e) => setTossSelection(e, modelData, setModelData)}
             />
             <Form.Check
-              required
               label="Balling"
               name="group2"
               type="radio"
               className="mx-3"
               value="Ball"
-              onClick={(e) => setToss({ ...toss, choose: e.target.value })}
+              onClick={(e) => setTossSelection(e, modelData, setModelData)}
             />
           </div>
+          <label className="mt-2">Overs</label>
+          <input
+            type="number"
+            min="1"
+            max="20"
+            value={modelData.overs}
+            onChange={(e) => {
+              setModelData({ ...modelData, overs: e.target.value });
+            }}
+            className="w-100 "
+          />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
             Close
           </Button>
-          <Button variant="primary" onClick={setTeamNamesAndToss}>
+          <Button variant="primary" onClick={setTeamNamesTossAndOver}>
             Done
           </Button>
         </Modal.Footer>
@@ -191,11 +208,11 @@ const Home = () => {
               <div className="mx-5">
                 <div>
                   <span>
-                    <b>{match.team_1.name}</b>
+                    <b>{match.team_1.name.toUpperCase()}</b>
                   </span>
                   <span>
                     {`
-                    ${match.team_1.TotalScore}
+                    ${match.team_1.totalScore}
                     ${
                       match.team_1.wickets !== 0
                         ? `/ ${match.team_1.wickets}`
@@ -206,11 +223,11 @@ const Home = () => {
                 </div>
                 <div>
                   <span>
-                    <b>{match.team_2.name}</b>
+                    <b>{match.team_2.name.toUpperCase()}</b>
                   </span>
                   <span>
                     {`
-                    ${match.team_2.TotalScore}
+                    ${match.team_2.totalScore}
                     ${
                       match.team_2.wickets !== 0
                         ? `/ ${match.team_2.wickets}`
