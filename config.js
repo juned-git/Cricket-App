@@ -24,14 +24,23 @@ export const INITIAL_MODEL_DATA = {
   team_2_name: "Team 2",
   toss: { team: "", choose: "" },
   overs: 1,
-}
+};
 export const matchStatus = {
-  pending: 'pending',
-  active: 'active',
-  done:'done'
-}
+  pending: "pending",
+  active: "active",
+  done: "done",
+};
 
 export const playerStatus = {
-  not_out:'Not Out',
-  out:'Out'
-}
+  not_out: "Not Out",
+  out: "out",
+};
+
+export const delivery = {
+  w:'W',
+  nb: "Nb",
+  wd: "Wd",
+  lb: "lb",
+  bye: "bye",
+  legel: "legel",
+};
