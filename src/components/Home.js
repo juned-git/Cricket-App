@@ -10,8 +10,10 @@ import {
   setTossSelection,
   setNonTournamentMatchesInLocalStorage,
   getNonTournamentMatchesFromLocalStorage,
+  setWickets,
+  setTeamTotalAndOvers,
 } from "./helper";
-import { INITIAL_MODEL_DATA } from "../../config";
+import { INITIAL_MODEL_DATA, matchStatus, playerStatus } from "../../config";
 
 const Home = () => {
   const [nonTournamentMatches, setNonTournamentMatches] = useState([]);
@@ -19,15 +21,22 @@ const Home = () => {
   const [show, setShow] = useState(false);
   const [valData, setValData] = useState({});
 
-  const handleClose = () => setShow(false);
+  const handleClose = () => {
+    setShow(false);
+    setModelData(INITIAL_MODEL_DATA);
+  };
   const handleShow = () => setShow(true);
 
   useEffect(() => {
-    const matches = getNonTournamentMatchesFromLocalStorage();
+    matches = getNonTournamentMatchesFromLocalStorage();
+
     if (!matches) {
       setNonTournamentMatchesInLocalStorage([]);
     } else {
+      matches = setWickets(matches);
+      matches = setTeamTotalAndOvers(matches);
       setNonTournamentMatches(matches);
+      setNonTournamentMatchesInLocalStorage(matches);
     }
   }, []);
 
@@ -46,22 +55,25 @@ const Home = () => {
         team_1: {
           name: "Team 1",
           batsman: [],
-          baller:[],
+          baller: [],
           totalScore: 0,
           wickets: 0,
-          overs:0
+          overs: 0,
+          extraRuns: 0,
         },
         team_2: {
           name: "Team 2",
           batsman: [],
-          baller:[],
+          baller: [],
           totalScore: 0,
           wickets: 0,
-          overs:0
+          overs: 0,
+          extraRuns: 0,
         },
       };
       match.team_1.name = modelData.team_1_name;
       match.team_2.name = modelData.team_2_name;
+      match.overs = modelData.overs;
       if (modelData.toss.team === "1") {
         match.toss = { ...modelData.toss, team: match.team_1.name };
       } else {
@@ -154,7 +166,7 @@ const Home = () => {
             max="20"
             value={modelData.overs}
             onChange={(e) => {
-              setModelData({ ...modelData, overs: e.target.value });
+              setModelData({ ...modelData, overs: Number(e.target.value) });
             }}
             className="w-100 "
           />
@@ -187,13 +199,13 @@ const Home = () => {
           return (
             <div key={index} className="mt-2">
               <div className="mx-3 d-flex justify-content-between">
-                <span>
+                <span className="d-flex justify-content-between">
                   <b>{index + 1}</b>
                   {match.toss.team !== "" ? (
                     <span className="text-primary mx-2">
                       <small>
-                        <mark>{match.toss.team}</mark> won the toss and elected
-                        to <mark>{match.toss.choose}</mark> first
+                        {match.toss.team.toUpperCase()} choose to{" "}
+                        {match.toss.choose}
                       </small>
                     </span>
                   ) : (
@@ -211,14 +223,11 @@ const Home = () => {
                     <b>{match.team_1.name.toUpperCase()}</b>
                   </span>
                   <span>
-                    {`
-                    ${match.team_1.totalScore}
-                    ${
+                    {` ${match.team_1.totalScore}${
                       match.team_1.wickets !== 0
-                        ? `/ ${match.team_1.wickets}`
+                        ? `/${match.team_1.wickets}`
                         : ""
-                    }
-                    (${match.overs})`}
+                    } (${match.team_1.overs})`}
                   </span>
                 </div>
                 <div>
@@ -226,20 +235,22 @@ const Home = () => {
                     <b>{match.team_2.name.toUpperCase()}</b>
                   </span>
                   <span>
-                    {`
-                    ${match.team_2.totalScore}
-                    ${
+                    {` ${match.team_2.totalScore}${
                       match.team_2.wickets !== 0
-                        ? `/ ${match.team_2.wickets}`
+                        ? `/${match.team_2.wickets}`
                         : ""
-                    } (${match.overs})`}
+                    } (${match.team_2.overs})`}
                   </span>
                 </div>
               </div>
 
-              <Link to={`/live/match/${index}`} className="mx-5">
-                Start Match <BsFillCaretRightSquareFill />
-              </Link>
+              {match.status !== matchStatus.done ? (
+                <Link to={`/live/match/${index}`} className="mx-5">
+                  Start Match <BsFillCaretRightSquareFill />
+                </Link>
+              ) : (
+               ''
+              )}
 
               <hr />
             </div>
